@@ -1,0 +1,18 @@
+---
+
+- hosts: all
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  pre_tasks:
+    - include: playbooks/update-upgrade.yml
+  
+  roles:
+    - role: ansible_facts
+    - role: keyboard-configuration
+    - role: vscode
+    - role: volatility
+    - role: volatility3
+
+  post_tasks:
+  - include: playbooks/memlabs.yml

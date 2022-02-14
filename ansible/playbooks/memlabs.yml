@@ -1,0 +1,26 @@
+---
+
+# https://github.com/stuxnet999/MemLabs
+
+- name: Set facts
+  ansible.builtin.set_fact:
+    memlabs_directory: "/home/vagrant/MemLabs"
+
+- name: Ensure memlabs directory directory exists
+  ansible.builtin.file:
+    dest: "{{ memlabs_directory }}"
+    state: directory
+    mode: '0755'
+
+- name: Download git repo
+  ansible.builtin.git:
+    repo: 'https://github.com/stuxnet999/MemLabs'
+    dest: "{{ memlabs_directory }}"
+
+- name: Install os packages
+  ansible.builtin.package:
+    name: ['ghex', 'steghide']
+    state: present
+  become: yes
+  register: pkg_result
+  until: pkg_result is success

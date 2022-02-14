@@ -1,0 +1,5 @@
+---
+
+volatility3_source: git+https://github.com/volatilityfoundation/volatility3.git
+volatility3_virtualenv: "/home/vagrant/venv/volatility3"
+volatility3_bin_link_path: "/usr/local/bin/vol3.py"

@@ -1,0 +1,5 @@
+---
+
+volatility_source: https://github.com/volatilityfoundation/volatility/archive/master.tar.gz
+volatility_virtualenv: "/home/vagrant/venv/volatility"
+volatility_bin_link_path: "/usr/local/bin/vol.py"

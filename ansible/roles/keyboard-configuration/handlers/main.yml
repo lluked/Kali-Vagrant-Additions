@@ -1,0 +1,6 @@
+---
+
+- name: Set keyboard configuration
+  command: dpkg-reconfigure -f noninteractive keyboard-configuration
+  become: yes
+  when: ansible_os_family == 'Debian'

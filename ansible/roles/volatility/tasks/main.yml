@@ -1,0 +1,98 @@
+---
+
+- name: Include distribution and version specific variables falling back if not defined
+  ansible.builtin.include_vars:  "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution }}-2021.3.yml"
+        - default.yml
+      paths:
+        - vars
+
+- name: Install os dependencies
+  ansible.builtin.package:
+    name: "{{ volatility_os_dependencies }}"
+    state: present
+  become: yes
+  when: volatility_os_dependencies is defined
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Check if pip2 exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/pip2
+  register: pip2
+
+- name: Download and install pip2
+  block:
+    - name: Download pip2
+      ansible.builtin.get_url:
+        url: https://bootstrap.pypa.io/pip/2.7/get-pip.py
+        dest: "{{ ansible_user_dir }}/get-pip.py"
+    - name: Install pip2
+      ansible.builtin.command: python2 "{{ ansible_user_dir }}/get-pip.py"
+      become: yes
+  when: not pip2.stat.exists
+
+- name: Delete get-pip.py after install
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/get-pip.py"
+    state: absent
+
+- name: Install setuptools
+  ansible.builtin.pip:
+    name: setuptools
+    state: present
+    executable: pip2
+  become: yes
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install virtualenv
+  ansible.builtin.pip:
+    name: virtualenv
+    state: present
+    executable: pip2
+  become: yes
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install setuptools to new virtualenv
+  ansible.builtin.pip:
+    name: setuptools
+    virtualenv: "{{ volatility_virtualenv }}"
+    virtualenv_python: python2.7
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install recommended pip packages to virtualenv
+  ansible.builtin.pip:
+    name: ['distorm3', 'pycrypto', 'pillow', 'openpyxl', 'ujson']
+    virtualenv: "{{ volatility_virtualenv }}"
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install optional pip packages to virtualenv
+  ansible.builtin.pip:
+    name: ['pytz', 'ipython']
+    virtualenv: "{{ volatility_virtualenv }}"
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install volatility to virtualenv
+  ansible.builtin.pip:
+    name: "{{ volatility_source }}"
+    state: present
+    virtualenv: "{{ volatility_virtualenv }}"
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Symlink volatility path
+  ansible.builtin.file:
+    src: "{{ volatility_virtualenv }}/bin/vol.py"
+    dest: "{{ volatility_bin_link_path }}"
+    mode: '0755'
+    state: link
+  become: yes

@@ -1,0 +1,8 @@
+---
+
+volatility_os_dependencies:
+  - gcc
+  - libfuzzy-dev
+  - libpcre++-dev
+  - pcregrep
+  - python2-dev

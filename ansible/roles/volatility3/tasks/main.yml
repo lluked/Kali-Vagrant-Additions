@@ -1,0 +1,64 @@
+---
+
+- name: Include distribution and version specific variables falling back if not defined
+  ansible.builtin.include_vars:  "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution }}-2021.3.yml"
+        - default.yml
+      paths:
+        - vars
+
+- name: Install os dependencies
+  package:
+    name: "{{ volatility3_os_dependencies }}"
+    state: present
+  become: yes
+  when: volatility3_os_dependencies is defined
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install setuptools
+  ansible.builtin.pip:
+    name: setuptools
+    state: present
+    executable: pip3
+  become: yes
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install virtualenv
+  ansible.builtin.pip:
+    name: virtualenv
+    state: present
+    executable: pip3
+  become: yes
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install volatility3 pip requirements to virtualenv
+  ansible.builtin.pip:
+    name: ['pefile', 'yara-python', 'capstone', 'pycryptodome', 'jsonschema', 'leechcorepyc', 'python-snappy']
+    state: present
+    virtualenv: "{{ volatility3_virtualenv }}"
+    virtualenv_python: python3
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Install volatility3 to virtualenv
+  ansible.builtin.pip:
+    name: "{{ volatility3_source }}"
+    state: present
+    virtualenv: "{{ volatility3_virtualenv }}"
+  register: pkg_result
+  until: pkg_result is success
+
+- name: Symlink volatility3 to path
+  ansible.builtin.file:
+    src: "{{ volatility3_virtualenv }}/bin/vol"
+    dest: "{{ volatility3_bin_link_path }}"
+    mode: '0755'
+    state: link
+  become: yes

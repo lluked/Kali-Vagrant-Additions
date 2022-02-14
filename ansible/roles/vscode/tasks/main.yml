@@ -1,0 +1,62 @@
+---
+
+- name: Include distribution and version specific variables falling back if not defined
+  ansible.builtin.include_vars:  "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution }}-2021.3.yml"
+        - default.yml
+      paths:
+        - vars
+
+- name: install dependencies (apt)
+  ansible.builtin.package:
+    name: "{{ vs_code_os_dependencies }} "
+    state: present
+  become: yes
+  when: vs_code_os_dependencies is defined
+
+- name: Download microsoft.asc
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: "{{ ansible_user_dir }}/"
+    mode: '0440'
+    force: yes
+  become: yes
+
+- name: Convert asc to gpg
+  ansible.builtin.shell:  "cat {{ ansible_user_dir }}/microsoft.asc | gpg --dearmor > {{ ansible_user_dir }}/packages.microsoft.gpg"
+  become: yes
+
+- name: Install gpg to /etc/apt/trusted.gpg.d/
+  ansible.builtin.command: "install -o root -g root -m 644 {{ ansible_user_dir }}/packages.microsoft.gpg /etc/apt/trusted.gpg.d/"
+  become: yes
+
+- name: Delete asc and gpg from home directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items: 
+    - "{{ ansible_user_dir }}/microsoft.asc"
+    - "{{ ansible_user_dir }}/packages.microsoft.gpg"
+
+- name: Install vs code repo
+  ansible.builtin.apt_repository:
+    repo: 'deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main'
+    filename: vscode
+    state: present
+  become: yes
+
+- name: Update apt packages
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  become: yes
+
+- name: Install vs code
+  ansible.builtin.apt:
+    name: code
+    state: present
+  become: yes
