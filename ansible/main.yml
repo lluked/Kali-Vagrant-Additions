@@ -5,7 +5,7 @@
     ansible_python_interpreter: /usr/bin/python3
 
   pre_tasks:
-    - include: playbooks/update-upgrade.yml
+    - include: playbooks/upgrade-dist.yml
   
   roles:
     - role: ansible_facts

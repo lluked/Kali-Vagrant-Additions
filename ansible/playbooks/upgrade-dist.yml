@@ -1,0 +1,8 @@
+---
+
+- name: Upgrade distribution
+  ansible.builtin.apt:
+    upgrade: dist
+    dpkg_options: 'force-confnew'
+  become: yes
+  when: ansible_os_family == 'Debian'
