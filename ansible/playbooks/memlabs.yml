@@ -6,7 +6,7 @@
   ansible.builtin.set_fact:
     memlabs_directory: "/home/vagrant/MemLabs"
 
-- name: Ensure memlabs directory directory exists
+- name: Ensure memlabs directory exists
   ansible.builtin.file:
     dest: "{{ memlabs_directory }}"
     state: directory
@@ -18,9 +18,10 @@
     dest: "{{ memlabs_directory }}"
 
 - name: Install os packages
-  ansible.builtin.package:
+  ansible.builtin.apt:
     name: ['ghex', 'steghide']
     state: present
+    update_cache: yes
   become: yes
   register: pkg_result
   until: pkg_result is success
