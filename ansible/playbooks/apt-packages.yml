@@ -1,0 +1,10 @@
+---
+
+- name: Install os packages
+  ansible.builtin.apt:
+    name: torbrowser-launcher
+    state: present
+    update_cache: yes
+  become: yes
+  register: pkg_result
+  until: pkg_result is success

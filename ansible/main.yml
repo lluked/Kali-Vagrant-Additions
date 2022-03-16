@@ -6,6 +6,7 @@
 
   pre_tasks:
     - include: playbooks/upgrade-dist.yml
+    - include: playbooks/apt-packages.yml
   
   roles:
     - role: ansible_facts
